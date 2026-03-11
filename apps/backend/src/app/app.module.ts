@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { UserModule } from '../user/user.module';
 import { ProjectModule } from '../project/project.module';
 import { TaskModule } from '../task/task.module';
+import { AssignmentModule } from '../assignment/assignment.module';
 
 @Module({
   imports: [
@@ -29,7 +30,8 @@ import { TaskModule } from '../task/task.module';
     }),
     UserModule,
     ProjectModule,
-    TaskModule
+    TaskModule,
+    AssignmentModule
   ],
   controllers: [AppController],
   providers: [AppService],

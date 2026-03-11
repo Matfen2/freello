@@ -4,3 +4,5 @@ export * from './lib/project/create-project.dto.js';
 export * from './lib/project/update-project.dto.js';
 export * from './lib/task/create-task.dto.js';
 export * from './lib/task/update-task.dto.js';
+export * from './lib/assignment/create-assignment.dto.js';
+export * from './lib/assignment/update-assignment.dto.js';
