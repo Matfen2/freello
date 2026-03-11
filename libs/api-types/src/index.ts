@@ -6,3 +6,4 @@ export * from './lib/task/create-task.dto.js';
 export * from './lib/task/update-task.dto.js';
 export * from './lib/assignment/create-assignment.dto.js';
 export * from './lib/assignment/update-assignment.dto.js';
+export * from './lib/auth/login.dto.js';
