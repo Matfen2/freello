@@ -19,7 +19,7 @@ import { CreateUserDto, UpdateUserDto, PaginationQueryDto } from '@freello/api-t
 
 @ApiTags('users')
 @ApiBearerAuth()
-@Controller('users')
+@Controller({ path: 'users', version: '1' })
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

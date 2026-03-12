@@ -14,7 +14,7 @@ import { AssignmentService } from './assignment.service';
 import { CreateAssignmentDto, UpdateAssignmentDto } from '@freello/api-types';
 
 @ApiTags('assignments')
-@Controller('assignments')
+@Controller({ path: 'assignments', version: '1' })
 export class AssignmentController {
   constructor(private readonly assignmentService: AssignmentService) {}
 

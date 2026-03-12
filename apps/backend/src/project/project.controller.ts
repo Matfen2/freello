@@ -15,7 +15,7 @@ import { ProjectService } from './project.service';
 import { CreateProjectDto, UpdateProjectDto, PaginationQueryDto } from '@freello/api-types';
 
 @ApiTags('projects')
-@Controller('projects')
+@Controller({ path: 'projects', version: '1' })
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 

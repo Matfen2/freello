@@ -14,7 +14,7 @@ import { TaskService } from './task.service';
 import { CreateTaskDto, UpdateTaskDto } from '@freello/api-types';
 
 @ApiTags('tasks')
-@Controller('tasks')
+@Controller({ path: 'tasks', version: '1' })
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
