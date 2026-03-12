@@ -11,6 +11,7 @@ export default [
           ignoredFiles: ['{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}'],
         },
       ],
+      "@typescript-eslint/consistent-type-imports": "off"
     },
     languageOptions: {
       parser: await import('jsonc-eslint-parser'),
