@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Project } from './project.entity';
-import { CreateProjectDto, UpdateProjectDto } from '@freello/api-types';
+import { CreateProjectDto, UpdateProjectDto, PaginationQueryDto } from '@freello/api-types';
 
 @Injectable()
 export class ProjectService {
@@ -11,8 +11,22 @@ export class ProjectService {
     private readonly projectRepository: Repository<Project>,
   ) {}
 
-  async findAll(): Promise<Project[]> {
-    return this.projectRepository.find({ order: { createdAt: 'DESC' } });
+  async findAll(query: PaginationQueryDto) {
+    const { page = 1, limit = 20, sort = 'createdAt', order = 'desc' } = query;
+
+    const allowedSort = ['createdAt', 'updatedAt', 'name'];
+    const sortField = allowedSort.includes(sort) ? sort : 'createdAt';
+
+    const [data, total] = await this.projectRepository.findAndCount({
+      order: { [sortField]: order.toUpperCase() as 'ASC' | 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    return {
+      data,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
   }
 
   async findOne(id: string): Promise<Project> {

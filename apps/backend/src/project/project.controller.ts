@@ -8,10 +8,11 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ProjectService } from './project.service';
-import { CreateProjectDto, UpdateProjectDto } from '@freello/api-types';
+import { CreateProjectDto, UpdateProjectDto, PaginationQueryDto } from '@freello/api-types';
 
 @ApiTags('projects')
 @Controller('projects')
@@ -19,8 +20,8 @@ export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
   @Get()
-  findAll() {
-    return this.projectService.findAll();
+  findAll(@Query() query: PaginationQueryDto) {
+    return this.projectService.findAll(query);
   }
 
   @Get(':id')
@@ -35,10 +36,7 @@ export class ProjectController {
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateProjectDto: UpdateProjectDto
-  ) {
+  update(@Param('id') id: string, @Body() updateProjectDto: UpdateProjectDto) {
     return this.projectService.update(id, updateProjectDto);
   }
 
