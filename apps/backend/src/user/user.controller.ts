@@ -12,9 +12,11 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { UserService } from './user.service';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { CreateUserDto, UpdateUserDto, PaginationQueryDto } from '@freello/api-types';
 
 @ApiTags('users')
+@ApiBearerAuth()
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}

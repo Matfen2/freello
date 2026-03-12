@@ -10,6 +10,7 @@ import { ProjectModule } from '../project/project.module';
 import { TaskModule } from '../task/task.module';
 import { AssignmentModule } from '../assignment/assignment.module';
 import { AuthModule } from '../auth/auth.module';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -55,7 +56,11 @@ import { AuthModule } from '../auth/auth.module';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
-    }
+    },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
   ],
 })
 export class AppModule {}

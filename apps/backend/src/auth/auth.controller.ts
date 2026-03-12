@@ -1,9 +1,11 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { LoginDto } from '@freello/api-types';
+import { LoginDto, RegisterDto } from '@freello/api-types';
 import { Throttle } from '@nestjs/throttler';
+import { Public } from './decorators/public.decorator';
 
+@Public()
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
@@ -17,5 +19,11 @@ export class AuthController {
       loginDto.password,
     );
     return this.authService.login(user);
+  }
+
+  @Throttle({ default: { ttl: 60, limit: 5 } })
+  @Post('register')
+  async register(@Body() registerDto: RegisterDto) {
+    return this.authService.register(registerDto);
   }
 }

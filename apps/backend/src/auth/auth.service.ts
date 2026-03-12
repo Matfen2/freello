@@ -1,9 +1,10 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { User } from '../user/user.entity';
+import { RegisterDto } from '@freello/api-types';
 
 @Injectable()
 export class AuthService {
@@ -29,5 +30,21 @@ export class AuthService {
   async login(user: User): Promise<{ accessToken: string }> {
     const payload = { sub: user.id, email: user.email };
     return { accessToken: this.jwtService.sign(payload) };
+  }
+
+  async register(dto: RegisterDto): Promise<{ accessToken: string }> {
+    const existing = await this.userRepository.findOne({
+      where: { email: dto.email },
+    });
+    if (existing) throw new ConflictException('Email already in use');
+
+    const passwordHash = await bcrypt.hash(dto.password, 10);
+    const user = this.userRepository.create({
+      email: dto.email,
+      name: dto.name ?? null,
+      passwordHash,
+    });
+    const saved = await this.userRepository.save(user);
+    return this.login(saved);
   }
 }
