@@ -14,6 +14,7 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { SelfOrAdmin } from '../auth/decorators/self-or-admin.decorator';
 import { CreateUserDto, UpdateUserDto, PaginationQueryDto } from '@freello/api-types';
 
 @ApiTags('users')
@@ -33,7 +34,7 @@ export class UserController {
     return this.userService.findAll(query);
   }
 
-  @Roles('admin')
+  @SelfOrAdmin('id')
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.userService.findOne(id);
@@ -46,7 +47,7 @@ export class UserController {
     return this.userService.create(createUserDto);
   }
 
-  @Roles('admin')
+  @SelfOrAdmin('id')
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.userService.update(id, updateUserDto);

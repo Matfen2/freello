@@ -5,13 +5,18 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+
+// Module
 import { UserModule } from '../user/user.module';
 import { ProjectModule } from '../project/project.module';
 import { TaskModule } from '../task/task.module';
 import { AssignmentModule } from '../assignment/assignment.module';
 import { AuthModule } from '../auth/auth.module';
+
+// Guard
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { SelfOrAdminGuard } from '../auth/guards/self-or-admin.guard';
 
 @Module({
   imports: [
@@ -54,18 +59,10 @@ import { RolesGuard } from '../auth/guards/roles.guard';
   controllers: [AppController],
   providers: [
     AppService,
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-    },
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: SelfOrAdminGuard },
   ],
 })
 export class AppModule {}
