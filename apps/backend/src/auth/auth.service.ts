@@ -17,7 +17,7 @@ export class AuthService {
   async validateUser(email: string, password: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { email },
-      select: ['id', 'email', 'name', 'passwordHash'],
+      select: ['id', 'email', 'name', 'passwordHash', 'role'],
     });
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
@@ -28,7 +28,7 @@ export class AuthService {
   }
 
   async login(user: User): Promise<{ accessToken: string }> {
-    const payload = { sub: user.id, email: user.email };
+    const payload = { sub: user.id, email: user.email, role: user.role };
     return { accessToken: this.jwtService.sign(payload) };
   }
 
