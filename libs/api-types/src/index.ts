@@ -9,3 +9,4 @@ export * from './lib/assignment/update-assignment.dto.js';
 export * from './lib/auth/login.dto.js';
 export * from './lib/common/pagination-query.dto.js';
 export * from './lib/auth/register.dto.js';
+export { CreateProjectWithTasksDto, InitialTaskItemDto } from './lib/project/create-project-with-tasks.dto.js';

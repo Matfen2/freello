@@ -1,14 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Project } from './project.entity';
-import { CreateProjectDto, UpdateProjectDto, PaginationQueryDto } from '@freello/api-types';
+import { Task } from '../task/task.entity';
+import { CreateProjectDto, UpdateProjectDto, PaginationQueryDto, CreateProjectWithTasksDto } from '@freello/api-types';
 
 @Injectable()
 export class ProjectService {
   constructor(
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async findAll(query: PaginationQueryDto) {
@@ -37,6 +39,32 @@ export class ProjectService {
 
   async create(createProjectDto: CreateProjectDto): Promise<Project> {
     return this.projectRepository.save(createProjectDto);
+  }
+
+  async createWithTasks(dto: CreateProjectWithTasksDto) {
+    return this.dataSource.transaction(async (manager) => {
+      // 1. Créer et sauvegarder le projet
+      const project = manager.getRepository(Project).create({
+        name: dto.name,
+        description: dto.description,
+      });
+      const savedProject = await manager.getRepository(Project).save(project);
+
+      // 2. Créer et sauvegarder toutes les tâches
+      const tasks = await Promise.all(
+        dto.tasks.map((taskDto) => {
+          const task = manager.getRepository(Task).create({
+            title: taskDto.title,
+            description: taskDto.description,
+            status: taskDto.status ?? 'todo',
+            projectId: savedProject.id,
+          });
+          return manager.getRepository(Task).save(task);
+        }),
+      );
+
+      return { project: savedProject, tasks };
+    });
   }
 
   async update(id: string, updateProjectDto: UpdateProjectDto): Promise<Project> {

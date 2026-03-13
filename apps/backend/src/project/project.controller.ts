@@ -10,11 +10,18 @@ import {
   HttpStatus,
   Query,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ProjectService } from './project.service';
-import { CreateProjectDto, UpdateProjectDto, PaginationQueryDto } from '@freello/api-types';
+import { Roles } from '../auth/decorators/roles.decorator';
+import {
+  CreateProjectDto,
+  UpdateProjectDto,
+  PaginationQueryDto,
+  CreateProjectWithTasksDto,
+} from '@freello/api-types';
 
 @ApiTags('projects')
+@ApiBearerAuth()
 @Controller({ path: 'projects', version: '1' })
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
@@ -27,6 +34,13 @@ export class ProjectController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.projectService.findOne(id);
+  }
+
+  @Roles('admin')
+  @Post('with-tasks')
+  @HttpCode(HttpStatus.CREATED)
+  createWithTasks(@Body() dto: CreateProjectWithTasksDto) {
+    return this.projectService.createWithTasks(dto);
   }
 
   @Post()
