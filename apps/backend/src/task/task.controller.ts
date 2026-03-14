@@ -8,19 +8,25 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { TaskService } from './task.service';
-import { CreateTaskDto, UpdateTaskDto } from '@freello/api-types';
+import { CreateTaskDto, UpdateTaskDto, PaginationQueryDto } from '@freello/api-types';
 
 @ApiTags('tasks')
+@ApiBearerAuth()
 @Controller({ path: 'tasks', version: '1' })
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
   @Get()
-  findAll() {
-    return this.taskService.findAll();
+  findAll(
+    @Query() query: PaginationQueryDto,
+    @Query('projectId') projectId?: string,
+    @Query('status') status?: string,
+  ) {
+    return this.taskService.findAll(query, projectId, status);
   }
 
   @Get(':id')

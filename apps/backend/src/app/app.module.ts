@@ -5,19 +5,21 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 import { join } from 'path';
 import { AppController } from './app.controller';
-import { HealthController } from './health.controller';
 import { AppService } from './app.service';
+import { HealthController } from './health.controller';
 
-// Module
+// Modules
 import { UserModule } from '../user/user.module';
 import { ProjectModule } from '../project/project.module';
 import { TaskModule } from '../task/task.module';
 import { AssignmentModule } from '../assignment/assignment.module';
 import { AuthModule } from '../auth/auth.module';
+import { ReportModule } from '../report/report.module';
 
-// Guard
+// Guards
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { SelfOrAdminGuard } from '../auth/guards/self-or-admin.guard';
@@ -60,15 +62,17 @@ import { SelfOrAdminGuard } from '../auth/guards/self-or-admin.guard';
       isGlobal: true,
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
-        ttl: config.get<number>('CACHE_TTL', 30) * 1000, // ms
+        ttl: config.get<number>('CACHE_TTL', 30) * 1000,
       }),
       inject: [ConfigService],
     }),
+    ScheduleModule.forRoot(),
     UserModule,
     ProjectModule,
     TaskModule,
     AssignmentModule,
     AuthModule,
+    ReportModule,
     TerminusModule,
   ],
   controllers: [AppController, HealthController],
