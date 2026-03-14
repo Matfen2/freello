@@ -4,6 +4,7 @@ import { TerminusModule } from '@nestjs/terminus';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { join } from 'path';
 import { AppController } from './app.controller';
 import { HealthController } from './health.controller';
 import { AppService } from './app.service';
@@ -36,7 +37,9 @@ import { SelfOrAdminGuard } from '../auth/guards/self-or-admin.guard';
         password: configService.get<string>('DB_PASSWORD', 'freello'),
         database: configService.get<string>('DB_DATABASE', 'freello'),
         autoLoadEntities: true,
-        synchronize: true,
+        synchronize: false,
+        migrationsRun: true,
+        migrations: [join(__dirname, '..', 'migrations', '*.{ts,js}')],
       }),
       inject: [ConfigService],
     }),

@@ -17,6 +17,9 @@ export class Task {
   @Column({ type: 'varchar', nullable: true })
   description!: string | null;
 
+  @Column({ type: 'int', nullable: true })
+  estimation!: number | null;
+
   @Column({ type: 'varchar', default: 'todo' })
   status!: 'todo' | 'in_progress' | 'done';
 

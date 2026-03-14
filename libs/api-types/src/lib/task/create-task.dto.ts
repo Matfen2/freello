@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsIn, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsIn, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 
 export type TaskStatus = 'todo' | 'in_progress' | 'done';
 
@@ -8,10 +8,12 @@ export class CreateTaskDto {
   @IsString()
   title!: string;
 
-  @ApiPropertyOptional({ example: 'Initial UX for landing page' })
+  @ApiPropertyOptional({ description: 'Story points ou heures estimées', minimum: 0 })
   @IsOptional()
   @IsString()
+  @Min(0)
   description?: string;
+  estimation?: number;
 
   @ApiProperty({
     enum: ['todo', 'in_progress', 'done'],
