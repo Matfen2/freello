@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { TerminusModule } from '@nestjs/terminus';
+import { CacheModule } from '@nestjs/cache-manager';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -52,6 +53,14 @@ import { SelfOrAdminGuard } from '../auth/guards/self-or-admin.guard';
             limit: Number(config.get('RATE_LIMIT_LIMIT', 100)),
           },
         ],
+      }),
+      inject: [ConfigService],
+    }),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      imports: [ConfigModule],
+      useFactory: (config: ConfigService) => ({
+        ttl: config.get<number>('CACHE_TTL', 30) * 1000, // ms
       }),
       inject: [ConfigService],
     }),
