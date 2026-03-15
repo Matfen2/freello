@@ -1,0 +1,15 @@
+{
+  "type": "record",
+  "name": "TaskEvent",
+  "namespace": "freello.tasks",
+  "fields": [
+    { "name": "eventType",   "type": "string" },
+    { "name": "taskId",      "type": "string" },
+    { "name": "projectId",   "type": "string" },
+    { "name": "title",       "type": "string" },
+    { "name": "description", "type": ["null", "string"], "default": null },
+    { "name": "status",      "type": "string" },
+    { "name": "estimation",  "type": ["null", "int"],    "default": null },
+    { "name": "occurredAt",  "type": "string" }
+  ]
+}

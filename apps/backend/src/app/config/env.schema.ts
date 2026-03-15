@@ -21,6 +21,16 @@ const envSchema = z.object({
 
   // CORS
   CORS_ORIGIN: z.string().default('http://localhost:4200'),
+
+  // Cache
+  CACHE_TTL: z.coerce.number().default(30),
+
+  // Reports
+  REPORTS_DIR: z.string().default('./reports'),
+
+  // Kafka
+  KAFKA_BROKERS: z.string().default('localhost:9094'),
+  SCHEMA_REGISTRY_URL: z.string().default('http://localhost:8081'),
 });
 
 export type Env = z.infer<typeof envSchema>;

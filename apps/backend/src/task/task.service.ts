@@ -5,6 +5,8 @@ import { Task } from './task.entity';
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject } from '@nestjs/common';
 import { CreateTaskDto, UpdateTaskDto, PaginationQueryDto } from '@freello/api-types';
+import { KafkaProducerService } from '../kafka/kafka-producer.service';
+import { TaskEvent } from '../kafka/task-event.types';
 
 @Injectable()
 export class TaskService {
@@ -13,6 +15,7 @@ export class TaskService {
     private readonly taskRepository: Repository<Task>,
     @Inject(CACHE_MANAGER)
     private readonly cache: Cache,
+    private readonly kafkaProducer: KafkaProducerService,
   ) {}
 
   // ── Helpers ──────────────────────────────────────────────────────────
@@ -38,6 +41,22 @@ export class TaskService {
         .filter((k) => k.startsWith('tasks_list_'))
         .map((k) => this.cache.del(k)),
     );
+  }
+
+  private toTaskEvent(
+    eventType: TaskEvent['eventType'],
+    task: Task,
+  ): TaskEvent {
+    return {
+      eventType,
+      taskId: task.id,
+      projectId: task.projectId,
+      title: task.title,
+      description: task.description ?? null,
+      status: task.status,
+      estimation: task.estimation ?? null,
+      occurredAt: new Date().toISOString(),
+    };
   }
 
   // ── Read ─────────────────────────────────────────────────────────────
@@ -89,6 +108,7 @@ export class TaskService {
   // ── Write ─────────────────────────────────────────────────────────────
   async create(createTaskDto: CreateTaskDto): Promise<Task> {
     const saved = await this.taskRepository.save(createTaskDto);
+    await this.kafkaProducer.emitTaskEvent(this.toTaskEvent('task.created', saved));
     await this.invalidateTaskCaches();
     return saved;
   }
@@ -97,12 +117,14 @@ export class TaskService {
     const task = await this.findOne(id);
     Object.assign(task, updateTaskDto);
     const saved = await this.taskRepository.save(task);
+    await this.kafkaProducer.emitTaskEvent(this.toTaskEvent('task.updated', saved));
     await this.invalidateTaskCaches(id);
     return saved;
   }
 
   async remove(id: string): Promise<void> {
     const task = await this.findOne(id);
+    await this.kafkaProducer.emitTaskEvent(this.toTaskEvent('task.deleted', task));
     await this.taskRepository.remove(task);
     await this.invalidateTaskCaches(id);
   }
