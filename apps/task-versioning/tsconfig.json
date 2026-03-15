@@ -5,12 +5,12 @@
     "moduleResolution": "node",
     "esModuleInterop": true,
     "strict": true,
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
     "outDir": "../../dist/apps/task-versioning",
     "rootDir": "src",
-    "baseUrl": ".",
-    "paths": {
-      "tsconfig-paths": ["../../node_modules/tsconfig-paths"]
-    }
+    "baseUrl": "."
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"]
