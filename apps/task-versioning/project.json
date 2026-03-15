@@ -1,0 +1,24 @@
+{
+  "name": "task-versioning",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/task-versioning/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "outputPath": "dist/apps/task-versioning",
+        "main": "apps/task-versioning/src/main.ts",
+        "tsConfig": "apps/task-versioning/tsconfig.app.json"
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "options": {
+        "buildTarget": "task-versioning:build",
+        "watch": true,
+        "inspect": false
+      }
+    }
+  }
+}

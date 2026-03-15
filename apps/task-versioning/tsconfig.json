@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "strict": true,
+    "outDir": "../../dist/apps/task-versioning",
+    "rootDir": "src",
+    "baseUrl": ".",
+    "paths": {
+      "tsconfig-paths": ["../../node_modules/tsconfig-paths"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}
