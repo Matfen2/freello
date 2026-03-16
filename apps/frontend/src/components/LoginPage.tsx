@@ -32,6 +32,7 @@ export function LoginPage() {
       <button
         onClick={toggleTheme}
         className="fixed top-4 right-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        aria-label="Toggle theme"
       >
         {theme === 'dark'
           ? <SunIcon className="w-4 h-4 text-yellow-400" />

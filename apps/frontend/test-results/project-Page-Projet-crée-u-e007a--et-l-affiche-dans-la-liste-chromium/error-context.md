@@ -2,18 +2,77 @@
 
 ```yaml
 - generic [ref=e3]:
-  - button [ref=e4] [cursor=pointer]:
-    - img [ref=e5]
-  - generic [ref=e7]:
-    - heading "Freello" [level=1] [ref=e8]
-    - generic [ref=e9]:
-      - heading "Connexion" [level=2] [ref=e10]
-      - paragraph [ref=e11]: Email ou mot de passe incorrect.
-      - generic [ref=e12]:
-        - text: Email
-        - textbox "you@example.com" [ref=e13]: test@freello.com
-      - generic [ref=e14]:
-        - text: Mot de passe
-        - textbox "••••••••" [ref=e15]: Test1234!
-      - button "Se connecter" [ref=e16] [cursor=pointer]
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: Freello
+      - navigation [ref=e7]:
+        - link "Dashboard" [ref=e8] [cursor=pointer]:
+          - /url: /dashboard
+      - generic [ref=e9]:
+        - button "Toggle theme" [ref=e10] [cursor=pointer]:
+          - img [ref=e11]
+        - generic [ref=e13]: test@freello.com
+        - button "Handle Logout" [ref=e14] [cursor=pointer]: Déconnexion
+  - main [ref=e15]:
+    - generic [ref=e16]:
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - heading "Projets" [level=1] [ref=e19]
+          - paragraph [ref=e20]: 31 projets
+        - button "+ Nouveau projet" [ref=e21] [cursor=pointer]:
+          - generic [ref=e22]: +
+          - text: Nouveau projet
+      - generic [ref=e23]:
+        - button "Projet Test 1773699062806 Aucune description Créé le 16 mars 2026" [ref=e24] [cursor=pointer]:
+          - heading "Projet Test 1773699062806" [level=3] [ref=e26]
+          - paragraph [ref=e27]: Aucune description
+          - paragraph [ref=e28]: Créé le 16 mars 2026
+        - button "Projet Test 1773699027393 Aucune description Créé le 16 mars 2026" [ref=e29] [cursor=pointer]:
+          - heading "Projet Test 1773699027393" [level=3] [ref=e31]
+          - paragraph [ref=e32]: Aucune description
+          - paragraph [ref=e33]: Créé le 16 mars 2026
+        - button "Projet Test 1773698992015 Aucune description Créé le 16 mars 2026" [ref=e34] [cursor=pointer]:
+          - heading "Projet Test 1773698992015" [level=3] [ref=e36]
+          - paragraph [ref=e37]: Aucune description
+          - paragraph [ref=e38]: Créé le 16 mars 2026
+        - button "Projet Test 1773698956314 Aucune description Créé le 16 mars 2026" [ref=e39] [cursor=pointer]:
+          - heading "Projet Test 1773698956314" [level=3] [ref=e41]
+          - paragraph [ref=e42]: Aucune description
+          - paragraph [ref=e43]: Créé le 16 mars 2026
+        - button "Projet Test 1773698920513 Aucune description Créé le 16 mars 2026" [ref=e44] [cursor=pointer]:
+          - heading "Projet Test 1773698920513" [level=3] [ref=e46]
+          - paragraph [ref=e47]: Aucune description
+          - paragraph [ref=e48]: Créé le 16 mars 2026
+        - button "Projet Test 1773698884756 Aucune description Créé le 16 mars 2026" [ref=e49] [cursor=pointer]:
+          - heading "Projet Test 1773698884756" [level=3] [ref=e51]
+          - paragraph [ref=e52]: Aucune description
+          - paragraph [ref=e53]: Créé le 16 mars 2026
+        - button "Projet E2E 1773698870111 Aucune description Créé le 16 mars 2026" [ref=e54] [cursor=pointer]:
+          - heading "Projet E2E 1773698870111" [level=3] [ref=e56]
+          - paragraph [ref=e57]: Aucune description
+          - paragraph [ref=e58]: Créé le 16 mars 2026
+        - button "Projet Test 1773698722566 Aucune description Créé le 16 mars 2026" [ref=e59] [cursor=pointer]:
+          - heading "Projet Test 1773698722566" [level=3] [ref=e61]
+          - paragraph [ref=e62]: Aucune description
+          - paragraph [ref=e63]: Créé le 16 mars 2026
+        - button "Projet Test 1773698685544 Aucune description Créé le 16 mars 2026" [ref=e64] [cursor=pointer]:
+          - heading "Projet Test 1773698685544" [level=3] [ref=e66]
+          - paragraph [ref=e67]: Aucune description
+          - paragraph [ref=e68]: Créé le 16 mars 2026
+        - button "Projet Test 1773698649459 Aucune description Créé le 16 mars 2026" [ref=e69] [cursor=pointer]:
+          - heading "Projet Test 1773698649459" [level=3] [ref=e71]
+          - paragraph [ref=e72]: Aucune description
+          - paragraph [ref=e73]: Créé le 16 mars 2026
+        - button "Projet Test 1773698612256 Aucune description Créé le 16 mars 2026" [ref=e74] [cursor=pointer]:
+          - heading "Projet Test 1773698612256" [level=3] [ref=e76]
+          - paragraph [ref=e77]: Aucune description
+          - paragraph [ref=e78]: Créé le 16 mars 2026
+        - button "Projet E2E 1773698599311 Aucune description Créé le 16 mars 2026" [ref=e79] [cursor=pointer]:
+          - heading "Projet E2E 1773698599311" [level=3] [ref=e81]
+          - paragraph [ref=e82]: Aucune description
+          - paragraph [ref=e83]: Créé le 16 mars 2026
+      - generic [ref=e84]:
+        - button "←" [disabled] [ref=e85]
+        - generic [ref=e86]: Page 1 / 3
+        - button "→" [ref=e87] [cursor=pointer]
 ```

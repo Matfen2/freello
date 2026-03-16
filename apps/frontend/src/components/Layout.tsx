@@ -55,6 +55,7 @@ export function Layout() {
             </span>
             <button
               onClick={handleLogout}
+              aria-label='Handle Logout'
               className="text-sm px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >
               Déconnexion
