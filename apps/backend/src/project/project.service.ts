@@ -32,17 +32,14 @@ export class ProjectService {
   }
 
   private async invalidateProjectCaches(id?: string): Promise<void> {
-    if (id) await this.cache.del(this.projectKey(id));
-    const keys = Array.from(
-      (await this.cache.stores.keys?.()) ?? []
-    ) as unknown as string[];
-    await Promise.all(
-      keys
-        .filter((k) => k.startsWith('projects_list_'))
-        .map((k) => this.cache.del(k)),
-    );
+    try {
+      if (id) await this.cache.del(this.projectKey(id));
+      // Les clés de liste expirent via TTL — pas d'invalidation active
+    } catch (err) {
+      console.warn('Cache invalidation failed (non-blocking):', err);
+    }
   }
-
+  
   // ── Read ─────────────────────────────────────────────────────────────
   async findAll(query: PaginationQueryDto) {
     const key = this.projectListKey(query);

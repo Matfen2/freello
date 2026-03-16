@@ -32,7 +32,7 @@ export class AuthService {
     return { accessToken: this.jwtService.sign(payload) };
   }
 
-  async register(dto: RegisterDto): Promise<{ accessToken: string }> {
+  async register(dto: RegisterDto): Promise<{ id: string; email: string }> {
     const existing = await this.userRepository.findOne({
       where: { email: dto.email },
     });
@@ -45,6 +45,6 @@ export class AuthService {
       passwordHash,
     });
     const saved = await this.userRepository.save(user);
-    return this.login(saved);
+    return { id: saved.id, email: saved.email };
   }
 }

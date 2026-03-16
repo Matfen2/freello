@@ -2,9 +2,21 @@
   "extends": "../../tsconfig.base.json",
   "files": [],
   "include": [],
+  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"],
   "references": [
-    {
-      "path": "./tsconfig.app.json"
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.spec.json" }
+  ],
+  "compilerOptions": {
+    "types": ["node"],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  },
+  "test": {
+    "executor": "@nx/jest:jest",
+    "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+    "options": {
+      "jestConfig": "apps/backend/jest.config.ts"
     }
-  ]
+  }
 }

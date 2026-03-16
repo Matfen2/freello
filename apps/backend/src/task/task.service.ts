@@ -22,10 +22,14 @@ export class TaskService {
     return `tasks_list_${q.page}_${q.limit}_${q.sort}_${q.order}_${p ?? 'all'}_${s ?? 'all'}`;
   }
   private taskKey(id: string) { return `task_${id}`; }
-  private async invalidateTaskCaches(id?: string) {
-    if (id) await this.cache.del(this.taskKey(id));
-    const keys = Array.from((await this.cache.stores.keys?.()) ?? []) as unknown as string[];
-    await Promise.all(keys.filter(k => k.startsWith('tasks_list_')).map(k => this.cache.del(k)));
+  
+  private async invalidateTaskCaches(id?: string): Promise<void> {
+    try {
+      if (id) await this.cache.del(this.taskKey(id));
+      // Les clés de liste expirent via TTL — pas d'invalidation active
+    } catch (err) {
+      console.warn('Cache invalidation failed (non-blocking):', err);
+    }
   }
 
   // ── Outbox helper ─────────────────────────────────────────────────────
