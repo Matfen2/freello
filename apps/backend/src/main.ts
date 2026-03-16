@@ -1,9 +1,9 @@
+import cookieParser from 'cookie-parser';
 import { NestFactory } from '@nestjs/core';
-import { VersioningType } from '@nestjs/common';
+import { VersioningType, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { validateEnv } from './app/config/env.schema';
-import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app/app.module';
 
 async function bootstrap() {
@@ -11,13 +11,15 @@ async function bootstrap() {
 
   validateEnv();
 
+  app.use(cookieParser());
+
   app.enableCors({
     origin: process.env['CORS_ORIGIN']
       ? process.env['CORS_ORIGIN'].split(',').map(o => o.trim())
       : 'http://localhost:4200',
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: false,
+    credentials: true,
   });
 
   app.enableVersioning({
@@ -34,6 +36,7 @@ async function bootstrap() {
     .setDescription('API versionnée - utiliser /v1/... ou /v2/...')
     .setVersion('1.0')
     .addBearerAuth()
+    .addCookieAuth('access_token')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
