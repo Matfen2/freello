@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useProject } from '../hooks/useProject';
 import { useTasks } from '../hooks/useTasks';
 import { TaskRow } from '../components/TaskRow';
@@ -19,21 +19,24 @@ export function ProjectPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const { project, loading: projectLoading } = useProject(id!);
   const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all');
   const [page, setPage] = useState(1);
-
-  const { tasks, meta, loading: tasksLoading, error, refetch } = useTasks({
-    projectId: id!,
-    status: statusFilter === 'all' ? undefined : statusFilter,
-    page,
-    limit: 20,
-  });
 
   // Modal état
   const [taskModal, setTaskModal] = useState<{ open: boolean; task?: Task | null }>({ open: false });
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; task?: Task | null }>({ open: false });
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const { project, loading: projectLoading } = useProject(id ?? '');
+
+  const { tasks, meta, loading: tasksLoading, error, refetch } = useTasks({
+    projectId: id ?? '',
+    status: statusFilter === 'all' ? undefined : statusFilter,
+    page,
+    limit: 20,
+  });
+
+  if (!id) return <Navigate to="/dashboard" replace />;
 
   const handleDelete = async () => {
     if (!deleteModal.task) return;
@@ -128,7 +131,7 @@ export function ProjectPage() {
 
         {!tasksLoading && tasks.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-center px-4">
-            <span className="text-3xl mb-3">✅</span>
+            <span role="img" aria-label="validé" className="text-3xl mb-3">✅</span>
             <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
               {statusFilter === 'all' ? 'Aucune tâche' : 'Aucune tâche dans ce statut'}
             </h3>
@@ -186,7 +189,7 @@ export function ProjectPage() {
       {/* Modals */}
       <TaskModal
         open={taskModal.open}
-        projectId={id!}
+        projectId={id}
         task={taskModal.task}
         onClose={() => setTaskModal({ open: false })}
         onSaved={refetch}
