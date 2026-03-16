@@ -46,3 +46,8 @@ Thumbs.db
 .github/instructions/nx.instructions.md
 
 vite.config.*.timestamp*
+
+# Playwright
+apps/frontend/e2e/playwright-report/
+apps/frontend/e2e/test-results/
+.env.e2e
