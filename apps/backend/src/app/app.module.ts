@@ -17,8 +17,8 @@ import { ProjectModule } from '../project/project.module';
 import { TaskModule } from '../task/task.module';
 import { AssignmentModule } from '../assignment/assignment.module';
 import { AuthModule } from '../auth/auth.module';
-import { KafkaModule } from '../kafka/kafka.module';
 import { ReportModule } from '../report/report.module';
+import { OutboxModule } from '../outbox/outbox.module';
 
 // Guards
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -75,7 +75,7 @@ import { SelfOrAdminGuard } from '../auth/guards/self-or-admin.guard';
     AuthModule,
     ReportModule,
     TerminusModule,
-    KafkaModule,
+    OutboxModule,
   ],
   controllers: [AppController, HealthController],
   providers: [

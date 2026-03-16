@@ -1,12 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Task } from './task.entity';
+import { DataSource, Repository } from 'typeorm';
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject } from '@nestjs/common';
+import { Task } from './task.entity';
+import { OutboxEvent } from '../outbox/outbox-event.entity';
 import { CreateTaskDto, UpdateTaskDto, PaginationQueryDto } from '@freello/api-types';
-import { KafkaProducerService } from '../kafka/kafka-producer.service';
-import { TaskEvent } from '../kafka/task-event.types';
+import { TaskEvent, TaskEventType } from '../kafka/task-event.types';
 
 @Injectable()
 export class TaskService {
@@ -15,38 +14,22 @@ export class TaskService {
     private readonly taskRepository: Repository<Task>,
     @Inject(CACHE_MANAGER)
     private readonly cache: Cache,
-    private readonly kafkaProducer: KafkaProducerService,
+    private readonly dataSource: DataSource,
   ) {}
 
-  // ── Helpers ──────────────────────────────────────────────────────────
-  private taskListKey(
-    query: PaginationQueryDto,
-    projectId?: string,
-    status?: string,
-  ): string {
-    return `tasks_list_${query.page}_${query.limit}_${query.sort}_${query.order}_${projectId ?? 'all'}_${status ?? 'all'}`;
+  // ── Helpers cache (inchangés) ─────────────────────────────────────────
+  private taskListKey(q: PaginationQueryDto, p?: string, s?: string) {
+    return `tasks_list_${q.page}_${q.limit}_${q.sort}_${q.order}_${p ?? 'all'}_${s ?? 'all'}`;
   }
-
-  private taskKey(id: string): string {
-    return `task_${id}`;
-  }
-
-  private async invalidateTaskCaches(id?: string): Promise<void> {
+  private taskKey(id: string) { return `task_${id}`; }
+  private async invalidateTaskCaches(id?: string) {
     if (id) await this.cache.del(this.taskKey(id));
-    const keys = Array.from(
-      (await this.cache.stores.keys?.()) ?? [],
-    ) as unknown as string[];
-    await Promise.all(
-      keys
-        .filter((k) => k.startsWith('tasks_list_'))
-        .map((k) => this.cache.del(k)),
-    );
+    const keys = Array.from((await this.cache.stores.keys?.()) ?? []) as unknown as string[];
+    await Promise.all(keys.filter(k => k.startsWith('tasks_list_')).map(k => this.cache.del(k)));
   }
 
-  private toTaskEvent(
-    eventType: TaskEvent['eventType'],
-    task: Task,
-  ): TaskEvent {
+  // ── Outbox helper ─────────────────────────────────────────────────────
+  private buildEventPayload(task: Task, eventType: TaskEventType): TaskEvent {
     return {
       eventType,
       taskId: task.id,
@@ -59,73 +42,79 @@ export class TaskService {
     };
   }
 
-  // ── Read ─────────────────────────────────────────────────────────────
-  async findAll(
-    query: PaginationQueryDto,
-    projectId?: string,
-    status?: string,
-  ) {
+  // ── Read (inchangé) ───────────────────────────────────────────────────
+  async findAll(query: PaginationQueryDto, projectId?: string, status?: string) {
     const key = this.taskListKey(query, projectId, status);
     const cached = await this.cache.get(key);
     if (cached) return cached;
-
     const { page = 1, limit = 20, sort = 'createdAt', order = 'desc' } = query;
     const allowedSort = ['createdAt', 'updatedAt', 'title', 'status'];
     const sortField = allowedSort.includes(sort) ? sort : 'createdAt';
-
     const where: Record<string, unknown> = {};
     if (projectId) where['projectId'] = projectId;
     if (status) where['status'] = status;
-
     const [data, total] = await this.taskRepository.findAndCount({
-      where,
-      order: { [sortField]: order.toUpperCase() as 'ASC' | 'DESC' },
-      skip: (page - 1) * limit,
-      take: limit,
+      where, order: { [sortField]: order.toUpperCase() as 'ASC' | 'DESC' },
+      skip: (page - 1) * limit, take: limit,
     });
-
-    const result = {
-      data,
-      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
-    };
-
+    const result = { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
     await this.cache.set(key, result);
     return result;
   }
 
   async findOne(id: string): Promise<Task> {
-    const key = this.taskKey(id);
-    const cached = await this.cache.get<Task>(key);
+    const cached = await this.cache.get<Task>(this.taskKey(id));
     if (cached) return cached;
-
     const task = await this.taskRepository.findOne({ where: { id } });
     if (!task) throw new NotFoundException(`Task #${id} not found`);
-
-    await this.cache.set(key, task);
+    await this.cache.set(this.taskKey(id), task);
     return task;
   }
 
-  // ── Write ─────────────────────────────────────────────────────────────
-  async create(createTaskDto: CreateTaskDto): Promise<Task> {
-    const saved = await this.taskRepository.save(createTaskDto);
-    await this.kafkaProducer.emitTaskEvent(this.toTaskEvent('task.created', saved));
+  // ── Write — transaction atomique task + outbox ────────────────────────
+  async create(dto: CreateTaskDto): Promise<Task> {
+    const task = await this.dataSource.transaction(async (manager) => {
+      const saved = await manager.getRepository(Task).save(dto);
+      await manager.getRepository(OutboxEvent).save({
+        aggregateType: 'task',
+        aggregateId: saved.id,
+        eventType: 'task.created',
+        payload: this.buildEventPayload(saved, 'task.created'),
+      });
+      return saved;
+    });
     await this.invalidateTaskCaches();
-    return saved;
+    return task;
   }
 
-  async update(id: string, updateTaskDto: UpdateTaskDto): Promise<Task> {
-    const task = await this.findOne(id);
-    Object.assign(task, updateTaskDto);
-    const saved = await this.taskRepository.save(task);
-    await this.kafkaProducer.emitTaskEvent(this.toTaskEvent('task.updated', saved));
+  async update(id: string, dto: UpdateTaskDto): Promise<Task> {
+    const existing = await this.findOne(id);
+    const task = await this.dataSource.transaction(async (manager) => {
+      Object.assign(existing, dto);
+      const saved = await manager.getRepository(Task).save(existing);
+      await manager.getRepository(OutboxEvent).save({
+        aggregateType: 'task',
+        aggregateId: saved.id,
+        eventType: 'task.updated',
+        payload: this.buildEventPayload(saved, 'task.updated'),
+      });
+      return saved;
+    });
     await this.invalidateTaskCaches(id);
-    return saved;
+    return task;
   }
 
   async remove(id: string): Promise<void> {
     const task = await this.findOne(id);
-    await this.kafkaProducer.emitTaskEvent(this.toTaskEvent('task.deleted', task));
-    await this.taskRepository.remove(task);
+    await this.dataSource.transaction(async (manager) => {
+      await manager.getRepository(OutboxEvent).save({
+        aggregateType: 'task',
+        aggregateId: task.id,
+        eventType: 'task.deleted',
+        payload: this.buildEventPayload(task, 'task.deleted'),
+      });
+      await manager.getRepository(Task).remove(task);
+    });
     await this.invalidateTaskCaches(id);
   }
 }
