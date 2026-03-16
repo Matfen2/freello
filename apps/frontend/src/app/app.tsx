@@ -25,8 +25,8 @@ export default function App() {
         }
       >
         <Route index element={<Navigate to="/dashboard" replace />} />
-        <Route path="projects/:id" element={<ProjectPage />} />
         <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="projects/:id" element={<ProjectPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
