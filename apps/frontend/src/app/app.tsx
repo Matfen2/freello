@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Layout } from '../components/Layout';
 import { LoginPage } from '../pages/LoginPage';
+import { ProjectPage } from '../pages/ProjectPage';
 import { DashboardPage } from '../pages/DashboardPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -24,6 +25,7 @@ export default function App() {
         }
       >
         <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="projects/:id" element={<ProjectPage />} />
         <Route path="dashboard" element={<DashboardPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
