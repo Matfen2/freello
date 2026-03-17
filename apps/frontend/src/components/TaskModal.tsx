@@ -5,24 +5,25 @@ import type { Task, TaskStatus } from '../lib/types';
 interface TaskModalProps {
   open: boolean;
   projectId: string;
-  task?: Task | null; // null = création, Task = édition
+  task?: Task | null;
+  defaultStatus?: TaskStatus;
   onClose: () => void;
   onSaved: () => void;
 }
 
 const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
-  { value: 'todo', label: 'À faire' },
+  { value: 'todo',        label: 'À faire' },
   { value: 'in_progress', label: 'En cours' },
-  { value: 'done', label: 'Terminé' },
+  { value: 'done',        label: 'Terminé' },
 ];
 
-export function TaskModal({ open, projectId, task, onClose, onSaved }: TaskModalProps) {
-  const [title, setTitle] = useState('');
+export function TaskModal({ open, projectId, task, defaultStatus, onClose, onSaved }: TaskModalProps) {
+  const [title, setTitle]           = useState('');
   const [description, setDescription] = useState('');
-  const [status, setStatus] = useState<TaskStatus>('todo');
+  const [status, setStatus]         = useState<TaskStatus>('todo');
   const [estimation, setEstimation] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [loading, setLoading]       = useState(false);
+  const [error, setError]           = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isEdit = !!task;
@@ -31,12 +32,13 @@ export function TaskModal({ open, projectId, task, onClose, onSaved }: TaskModal
     if (open) {
       setTitle(task?.title ?? '');
       setDescription(task?.description ?? '');
-      setStatus(task?.status ?? 'todo');
+      // defaultStatus pré-sélectionne le statut quand on clique "+" depuis une colonne
+      setStatus(task?.status ?? defaultStatus ?? 'todo');
       setEstimation(task?.estimation?.toString() ?? '');
       setError('');
       setTimeout(() => inputRef.current?.focus(), 50);
     }
-  }, [open, task]);
+  }, [open, task, defaultStatus]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };

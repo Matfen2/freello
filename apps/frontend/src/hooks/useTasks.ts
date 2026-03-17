@@ -26,12 +26,12 @@ export function useTasks({
     try {
       const res = await api.get<PaginatedResponse<Task>>('/v1/tasks', {
         params: {
-          projectId,
+          ...(projectId ? { projectId } : {}), 
           ...(status ? { status } : {}),
           page,
           limit,
           sort: 'createdAt',
-          order: 'asc',
+          order: 'desc',
         },
       });
       setTasks(res.data.data);
