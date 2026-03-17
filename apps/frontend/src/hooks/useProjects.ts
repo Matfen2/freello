@@ -13,7 +13,7 @@ export function useProjects({ page = 1, limit = 12 }: UseProjectsOptions = {}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProjects = useCallback(async () => {
+  const fetchProjects = useCallback(async (): Promise<void> => {
     setLoading(true);
     setError(null);
     try {

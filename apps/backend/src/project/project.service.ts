@@ -34,7 +34,11 @@ export class ProjectService {
   private async invalidateProjectCaches(id?: string): Promise<void> {
     try {
       if (id) await this.cache.del(this.projectKey(id));
-      // Les clés de liste expirent via TTL — pas d'invalidation active
+      // Invalide aussi toutes les clés de liste page 1 à 10
+      for (let p = 1; p <= 10; p++) {
+        await this.cache.del(`projects_list_${p}_12_createdAt_desc`);
+        await this.cache.del(`projects_list_${p}_20_createdAt_desc`);
+      }
     } catch (err) {
       console.warn('Cache invalidation failed (non-blocking):', err);
     }

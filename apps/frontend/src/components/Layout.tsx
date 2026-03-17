@@ -65,7 +65,7 @@ export function Layout() {
       </header>
 
       {/* Main */}
-      <main className="mx-auto max-w-7xl px-4 py-8">
+      <main className="w-full px-6 py-8">
         <Outlet />
       </main>
     </div>

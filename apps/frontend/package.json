@@ -2,6 +2,16 @@
   "name": "@org/frontend",
   "version": "0.0.1",
   "private": true,
+  "nx": {
+    "targets": {
+      "test": {
+        "executor": "@nx/vitest:test",
+        "options": {
+          "config": "apps/frontend/vite.config.mts"
+        }
+      }
+    }
+  },
   "scripts": {
     "e2e": "playwright test --config e2e/playwright.config.ts",
     "e2e:ui": "playwright test --config e2e/playwright.config.ts --ui",
@@ -17,6 +27,12 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
-    "@types/node": "^25.5.0"
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^25.5.0",
+    "@vitest/ui": "^4.1.0",
+    "jsdom": "^28.1.0",
+    "vitest": "^4.1.0"
   }
 }

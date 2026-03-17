@@ -1,13 +1,14 @@
 interface DeleteConfirmModalProps {
   open: boolean;
   title: string;
+  entityLabel?: string; // 'tâche' par défaut, 'projet' pour les projets
   onConfirm: () => void;
   onClose: () => void;
   loading?: boolean;
 }
 
 export function DeleteConfirmModal({
-  open, title, onConfirm, onClose, loading,
+  open, title, entityLabel = 'tâche', onConfirm, onClose, loading,
 }: DeleteConfirmModalProps) {
   if (!open) return null;
   return (
@@ -20,11 +21,14 @@ export function DeleteConfirmModal({
         onClick={e => e.stopPropagation()}
       >
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-          Supprimer la tâche
+          Supprimer {entityLabel === 'projet' ? 'le projet' : 'la tâche'}
         </h2>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-          Supprimer <span className="font-medium text-gray-900 dark:text-gray-100">"{title}"</span> ?
-          Cette action est irréversible.
+          Supprimer{' '}
+          <span className="font-medium text-gray-900 dark:text-gray-100">
+            &ldquo;{title}&rdquo;
+          </span>{' '}
+          ? Cette action est irréversible.
         </p>
         <div className="flex justify-end gap-3">
           <button
