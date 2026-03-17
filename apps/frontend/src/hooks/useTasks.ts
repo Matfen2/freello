@@ -20,13 +20,13 @@ export function useTasks({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTasks = useCallback(async () => {
+  const fetchTasks = useCallback(async (): Promise<void> => {
     setLoading(true);
     setError(null);
     try {
       const res = await api.get<PaginatedResponse<Task>>('/v1/tasks', {
         params: {
-          ...(projectId ? { projectId } : {}), 
+          ...(projectId ? { projectId } : {}),
           ...(status ? { status } : {}),
           page,
           limit,

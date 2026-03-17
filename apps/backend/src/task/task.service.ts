@@ -17,16 +17,36 @@ export class TaskService {
     private readonly dataSource: DataSource,
   ) {}
 
-  // ── Helpers cache (inchangés) ─────────────────────────────────────────
+  // ── Helpers cache ─────────────────────────────────────────────────────
   private taskListKey(q: PaginationQueryDto, p?: string, s?: string) {
     return `tasks_list_${q.page}_${q.limit}_${q.sort}_${q.order}_${p ?? 'all'}_${s ?? 'all'}`;
   }
+
   private taskKey(id: string) { return `task_${id}`; }
-  
-  private async invalidateTaskCaches(id?: string): Promise<void> {
+
+  private async invalidateTaskCaches(projectId?: string, taskId?: string): Promise<void> {
     try {
-      if (id) await this.cache.del(this.taskKey(id));
-      // Les clés de liste expirent via TTL — pas d'invalidation active
+      if (taskId) await this.cache.del(this.taskKey(taskId));
+
+      // Invalide toutes les combinaisons possibles de clés de liste
+      const pages   = Array.from({ length: 10 }, (_, i) => i + 1);
+      const limits  = [20, 200];
+      const sorts   = ['createdAt', 'updatedAt', 'title', 'status'];
+      const orders  = ['asc', 'desc'];
+
+      for (const page of pages) {
+        for (const limit of limits) {
+          for (const sort of sorts) {
+            for (const order of orders) {
+              const q = { page, limit, sort, order } as PaginationQueryDto;
+              // avec projectId
+              if (projectId) await this.cache.del(this.taskListKey(q, projectId));
+              // sans projectId (all)
+              await this.cache.del(this.taskListKey(q));
+            }
+          }
+        }
+      }
     } catch (err) {
       console.warn('Cache invalidation failed (non-blocking):', err);
     }
@@ -46,7 +66,7 @@ export class TaskService {
     };
   }
 
-  // ── Read (inchangé) ───────────────────────────────────────────────────
+  // ── Read ──────────────────────────────────────────────────────────────
   async findAll(query: PaginationQueryDto, projectId?: string, status?: string) {
     const key = this.taskListKey(query, projectId, status);
     const cached = await this.cache.get(key);
@@ -58,8 +78,10 @@ export class TaskService {
     if (projectId) where['projectId'] = projectId;
     if (status) where['status'] = status;
     const [data, total] = await this.taskRepository.findAndCount({
-      where, order: { [sortField]: order.toUpperCase() as 'ASC' | 'DESC' },
-      skip: (page - 1) * limit, take: limit,
+      where,
+      order: { [sortField]: order.toUpperCase() as 'ASC' | 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
     const result = { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
     await this.cache.set(key, result);
@@ -75,7 +97,7 @@ export class TaskService {
     return task;
   }
 
-  // ── Write — transaction atomique task + outbox ────────────────────────
+  // ── Write ─────────────────────────────────────────────────────────────
   async create(dto: CreateTaskDto): Promise<Task> {
     const task = await this.dataSource.transaction(async (manager) => {
       const saved = await manager.getRepository(Task).save(dto);
@@ -87,7 +109,7 @@ export class TaskService {
       });
       return saved;
     });
-    await this.invalidateTaskCaches();
+    await this.invalidateTaskCaches(task.projectId);
     return task;
   }
 
@@ -104,7 +126,7 @@ export class TaskService {
       });
       return saved;
     });
-    await this.invalidateTaskCaches(id);
+    await this.invalidateTaskCaches(task.projectId, id);
     return task;
   }
 
@@ -119,6 +141,6 @@ export class TaskService {
       });
       await manager.getRepository(Task).remove(task);
     });
-    await this.invalidateTaskCaches(id);
+    await this.invalidateTaskCaches(task.projectId, id);
   }
 }

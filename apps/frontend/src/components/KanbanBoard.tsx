@@ -4,7 +4,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  closestCorners,
+  closestCenter,
 } from '@dnd-kit/core';
 import { motion } from 'framer-motion';
 import { KanbanColumn } from './KanbanColumn';
@@ -18,8 +18,7 @@ const COLUMNS: { status: TaskStatus; label: string; accent: string }[] = [
   { status: 'done',        label: 'Terminé',  accent: 'bg-emerald-400' },
 ];
 
-// Drag overlay — actions désactivées pendant le drag
-function noop(_task: Task) { /* intentionally empty */ }
+function noop(_task: Task) { /* drag overlay — no action */ }
 
 interface Props {
   tasks: Task[];
@@ -30,7 +29,7 @@ interface Props {
 }
 
 export function KanbanBoard({ tasks, refetch, onEdit, onDelete, onAddTask }: Props) {
-  const { columns, activeTask, onDragStart, onDragEnd } = useKanban(tasks, refetch);
+  const { columns, activeTask, onDragStart, onDragOver, onDragEnd } = useKanban(tasks, refetch);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -41,8 +40,9 @@ export function KanbanBoard({ tasks, refetch, onEdit, onDelete, onAddTask }: Pro
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCorners}
+      collisionDetection={closestCenter}
       onDragStart={onDragStart}
+      onDragOver={onDragOver}
       onDragEnd={onDragEnd}
     >
       <motion.div
@@ -76,7 +76,7 @@ export function KanbanBoard({ tasks, refetch, onEdit, onDelete, onAddTask }: Pro
         easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
       }}>
         {activeTask ? (
-          <div className="rotate-2 scale-105 opacity-90">
+          <div className="rotate-2 scale-105 opacity-90 pointer-events-none">
             <KanbanCard
               task={activeTask}
               onEdit={noop}

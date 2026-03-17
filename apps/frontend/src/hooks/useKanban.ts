@@ -1,5 +1,6 @@
-import { useState, useCallback } from 'react';
-import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
+import { useState, useCallback, useEffect } from 'react';
+import type { DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
+import { arrayMove } from '@dnd-kit/sortable';
 import { api } from '../lib/api';
 import type { Task, TaskStatus } from '../lib/types';
 
@@ -16,80 +17,112 @@ export function buildColumns(tasks: Task[]): KanbanColumns {
   return cols;
 }
 
+function findColumnOfTask(columns: KanbanColumns, taskId: string): TaskStatus | null {
+  for (const status of STATUSES) {
+    if (columns[status].some(t => t.id === taskId)) return status;
+  }
+  return null;
+}
+
 export function useKanban(tasks: Task[], refetch: () => void) {
   const [columns, setColumns] = useState<KanbanColumns>(() => buildColumns(tasks));
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
-  // Sync columns when tasks prop changes
-  const syncColumns = useCallback((newTasks: Task[]) => {
-    setColumns(buildColumns(newTasks));
-  }, []);
+  // Resync quand tasks change (après refetch), sauf pendant un drag
+  useEffect(() => {
+    if (!isDragging) {
+      setColumns(buildColumns(tasks));
+    }
+  }, [tasks, isDragging]);
 
   const onDragStart = useCallback(({ active }: DragStartEvent) => {
+    setIsDragging(true);
     const all = Object.values(columns).flat();
-    const task = all.find(t => t.id === active.id) ?? null;
-    setActiveTask(task);
+    setActiveTask(all.find(t => t.id === active.id) ?? null);
   }, [columns]);
 
-  const onDragEnd = useCallback(async ({ active, over }: DragEndEvent) => {
-    setActiveTask(null);
+  // ── onDragOver : déplace visuellement la card pendant le drag ──────────
+  const onDragOver = useCallback(({ active, over }: DragOverEvent) => {
     if (!over) return;
 
-    const taskId = active.id as string;
-    const overId = over.id as string;
+    const activeId = active.id as string;
+    const overId   = over.id as string;
 
-    // Find source column
-    let sourceStatus: TaskStatus | null = null;
-    let draggedTask: Task | null = null;
+    const activeCol = findColumnOfTask(columns, activeId);
+    if (!activeCol) return;
 
-    for (const status of STATUSES) {
-      const found = columns[status].find(t => t.id === taskId);
-      if (found) {
-        sourceStatus = status;
-        draggedTask = found;
-        break;
-      }
+    // Colonne cible : soit l'overId EST un statut, soit c'est une task dont on cherche la colonne
+    let overCol: TaskStatus | null = null;
+    if (STATUSES.includes(overId as TaskStatus)) {
+      overCol = overId as TaskStatus;
+    } else {
+      overCol = findColumnOfTask(columns, overId);
     }
 
-    if (!sourceStatus || !draggedTask) return;
+    if (!overCol || activeCol === overCol) return;
 
-    // Determine target column — overId is either a column status or a task id
-    let targetStatus: TaskStatus = sourceStatus;
-    if (STATUSES.includes(overId as TaskStatus)) {
-      targetStatus = overId as TaskStatus;
-    } else {
-      for (const status of STATUSES) {
-        if (columns[status].some(t => t.id === overId)) {
-          targetStatus = status;
-          break;
+    setColumns(prev => {
+      const activeTask = prev[activeCol].find(t => t.id === activeId);
+      if (!activeTask) return prev;
+
+      const overIndex = prev[overCol as TaskStatus].findIndex(t => t.id === overId);
+      const insertAt  = overIndex >= 0 ? overIndex : prev[overCol as TaskStatus].length;
+
+      return {
+        ...prev,
+        [activeCol]: prev[activeCol].filter(t => t.id !== activeId),
+        [overCol as TaskStatus]: [
+          ...prev[overCol as TaskStatus].slice(0, insertAt),
+          { ...activeTask, status: overCol as TaskStatus },
+          ...prev[overCol as TaskStatus].slice(insertAt),
+        ],
+      };
+    });
+  }, [columns]);
+
+  // ── onDragEnd : persiste le nouveau statut ─────────────────────────────
+  const onDragEnd = useCallback(async ({ active, over }: DragEndEvent) => {
+    setActiveTask(null);
+    setIsDragging(false);
+
+    if (!over) return;
+
+    const activeId = active.id as string;
+    const overId   = over.id as string;
+
+    // Après onDragOver les colonnes sont déjà à jour — on cherche le nouveau statut
+    const newCol = findColumnOfTask(columns, activeId);
+    if (!newCol) return;
+
+    // Réordonne dans la même colonne si over est une task
+    if (!STATUSES.includes(overId as TaskStatus)) {
+      const overCol = findColumnOfTask(columns, overId);
+      if (overCol === newCol) {
+        const oldIndex = columns[newCol].findIndex(t => t.id === activeId);
+        const newIndex = columns[newCol].findIndex(t => t.id === overId);
+        if (oldIndex !== -1 && newIndex !== -1) {
+          setColumns(prev => ({
+            ...prev,
+            [newCol]: arrayMove(prev[newCol], oldIndex, newIndex),
+          }));
         }
       }
     }
 
-    if (targetStatus === sourceStatus) return;
+    // Cherche l'ancien statut dans les tasks d'origine pour savoir si ça a changé
+    const originalTask = tasks.find(t => t.id === activeId);
+    if (!originalTask || originalTask.status === newCol) return;
 
-    // Optimistic update
-    setColumns(prev => {
-      const next = { ...prev };
-      next[sourceStatus!] = prev[sourceStatus!].filter(t => t.id !== taskId);
-      next[targetStatus] = [...prev[targetStatus], { ...draggedTask!, status: targetStatus }];
-      return next;
-    });
-
-    // Persist to API
+    // Persiste via API
     try {
-      await api.patch(`/v1/tasks/${taskId}`, { status: targetStatus });
+      await api.patch(`/v1/tasks/${activeId}`, { status: newCol });
       refetch();
     } catch {
-      // Rollback on error
-      setColumns(prev => {
-        const next = { ...prev };
-        next[targetStatus] = prev[targetStatus].filter(t => t.id !== taskId);
-        next[sourceStatus!] = [...prev[sourceStatus!], draggedTask!];
-        return next;
-      });
+      // Rollback — remet les colonnes dans l'état original
+      setColumns(buildColumns(tasks));
     }
-  }, [columns, refetch]);
+  }, [columns, tasks, refetch]);
 
-  return { columns, syncColumns, activeTask, onDragStart, onDragEnd };
+  return { columns, activeTask, onDragStart, onDragOver, onDragEnd };
 }
