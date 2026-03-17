@@ -26,4 +26,14 @@ export class PaginationQueryDto {
   @IsOptional()
   @IsString()
   order?: 'asc' | 'desc' = 'desc';
+
+  @ApiPropertyOptional({ description: 'Filtrer par projet' })
+  @IsOptional()
+  @IsString()
+  projectId?: string;
+
+  @ApiPropertyOptional({ description: 'Filtrer par statut' })
+  @IsOptional()
+  @IsString()
+  status?: string;
 }
