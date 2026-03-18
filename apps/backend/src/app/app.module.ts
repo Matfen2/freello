@@ -43,7 +43,7 @@ import { SelfOrAdminGuard } from '../auth/guards/self-or-admin.guard';
         autoLoadEntities: true,
         synchronize: false,
         migrationsRun: true,
-        migrations: [join(__dirname, '..', 'migrations', '*.{ts,js}')],
+        migrations: [join(__dirname, 'migrations', '*.js')],
       }),
       inject: [ConfigService],
     }),
