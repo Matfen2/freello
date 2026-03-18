@@ -23,7 +23,7 @@ ENV NODE_ENV=production
 
 COPY package*.json ./
 COPY .npmrc* ./
-RUN npm ci --omit=dev --legacy-peer-deps && npm cache clean --force
+RUN npm ci --legacy-peer-deps && npm cache clean --force
 
 # Le build Nx backend sort dans dist/apps/backend
 COPY --from=builder /app/apps/backend/dist ./dist
