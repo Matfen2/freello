@@ -22,6 +22,7 @@ ENV NODE_ENV=production
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/apps/backend/dist ./dist
 COPY --from=builder /app/apps/backend/avro ./avro
+COPY --from=builder /app/libs ./libs
 
 EXPOSE 3333
 
