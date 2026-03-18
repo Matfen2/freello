@@ -20,7 +20,6 @@ module.exports = {
       outputHashing: 'none',
       generatePackageJson: false,
       sourceMap: true,
-      externalDependencies: 'none', 
     }),
   ],
 };
