@@ -11,6 +11,9 @@ COPY . .
 
 RUN npx nx build backend --prod
 
+# Debug — voir ce qui a été généré
+RUN find /app/dist -name "main.js" 2>/dev/null || echo "main.js not found" && ls /app/dist/ 2>/dev/null || echo "no dist"
+
 # ── Stage 2 : Production ──────────────────────────────────────────────────────
 FROM node:20-alpine AS runner
 
@@ -18,15 +21,13 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copie uniquement les dépendances de production
 COPY package*.json ./
 COPY .npmrc* ./
 RUN npm ci --omit=dev --legacy-peer-deps && npm cache clean --force
 
-# Copie le build
+# Le build Nx backend sort dans dist/apps/backend
 COPY --from=builder /app/dist/apps/backend ./dist
 COPY --from=builder /app/apps/backend/avro ./avro
-COPY --from=builder /app/libs ./libs
 
 EXPOSE 3333
 
