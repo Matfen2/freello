@@ -179,7 +179,7 @@ describe('TaskService', () => {
       expect(mockOutboxManagerRepo.save).toHaveBeenCalledWith(
         expect.objectContaining({ eventType: 'task.created', aggregateType: 'task' }),
       );
-      expect(mockCacheManager.del).not.toHaveBeenCalled();
+      expect(mockCacheManager.del).toHaveBeenCalled();
     });
   });
 

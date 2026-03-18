@@ -144,7 +144,7 @@ describe('ProjectService', () => {
 
       expect(result).toEqual(mockProject);
       expect(mockProjectRepository.save).toHaveBeenCalledWith(dto);
-      expect(mockCacheManager.del).not.toHaveBeenCalled();
+      expect(mockCacheManager.del).toHaveBeenCalled();
     });
   });
 
