@@ -1,107 +1,188 @@
-# New Nx Repository
+# Freello
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+> Application de gestion de projets et tâches inspirée de Trello — projet portfolio démontrant une architecture fullstack moderne avec event-driven architecture.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+🌐 **Live** : [https://freello.site](https://freello.site)
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/js?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+---
 
-## Try the full Nx platform
-🚀 If you haven't connected to Nx Cloud yet, [complete your setup here](https://cloud.nx.app/setup/connect-workspace/guide). Get faster builds with remote caching, distributed task execution, and self-healing CI. [See how your workspace can benefit](#nx-cloud).
+## Stack technique
 
-## Generate a library
+### Backend
+- **NestJS** + TypeScript — framework Node.js modulaire
+- **PostgreSQL** + TypeORM — base de données relationnelle avec migrations
+- **Apache Kafka** (KRaft) — message broker event-driven
+- **Schema Registry** + Avro — sérialisation des événements typés
+- **Outbox Pattern** — garantie de livraison des événements Kafka
+- **JWT** HttpOnly cookies — authentification sécurisée
+- **Redis-less cache** in-memory — cache avec invalidation complète
+- **Swagger** — documentation API auto-générée (`/api`)
 
-```sh
-npx nx g @nx/js:lib packages/pkg1 --publishable --importPath=@my-org/pkg1
+### Frontend
+- **React** + TypeScript + Vite
+- **TailwindCSS** — styling utility-first
+- **framer-motion** — animations fluides
+- **@dnd-kit** — drag & drop Kanban
+- **Axios** — client HTTP avec intercepteurs
+
+### Infrastructure & DevOps
+- **Nx monorepo** — gestion multi-apps et libs partagées
+- **Docker** + Docker Compose — containerisation complète
+- **GitHub Actions** — CI/CD (lint, test, build, push GHCR, deploy)
+- **GHCR** — GitHub Container Registry pour les images Docker
+- **VPS OVH** — hébergement production (Ubuntu 25.04)
+- **nginx** — reverse proxy avec SSL
+- **Let's Encrypt** — certificat SSL automatique
+
+---
+
+## Architecture
+
+```
+freello/                          # Nx monorepo
+├── apps/
+│   ├── backend/                  # NestJS API
+│   │   ├── src/
+│   │   │   ├── auth/             # JWT, Guards (JWT/Roles/SelfOrAdmin)
+│   │   │   ├── user/             # CRUD utilisateurs
+│   │   │   ├── project/          # CRUD projets + cache
+│   │   │   ├── task/             # CRUD tâches + cache + Outbox
+│   │   │   ├── assignment/       # Assignation tâches/utilisateurs
+│   │   │   ├── kafka/            # Producer Avro + Schema Registry
+│   │   │   ├── outbox/           # Outbox Pattern + Cron poller
+│   │   │   └── migrations/       # TypeORM migrations
+│   │   └── Dockerfile
+│   ├── frontend/                 # React SPA
+│   │   ├── src/
+│   │   │   ├── pages/            # Login, Register, Dashboard, Project
+│   │   │   ├── components/       # Layout, KanbanBoard, TaskRow, etc.
+│   │   │   ├── hooks/            # useProjects, useTasks, useKanban
+│   │   │   └── contexts/         # AuthContext, ThemeContext
+│   │   └── Dockerfile
+│   └── task-versioning/          # Consumer Kafka (CSV export)
+├── libs/
+│   └── api-types/                # DTOs partagés frontend/backend
+├── nginx/
+│   ├── nginx.conf                # Reverse proxy HTTPS
+│   └── nginx-spa.conf            # SPA fallback
+├── docker-compose.prod.yml       # Stack production complète
+└── .github/workflows/ci.yml      # Pipeline CI/CD
 ```
 
-## Run tasks
+---
 
-To build the library use:
+## Fonctionnalités
 
-```sh
-npx nx build pkg1
+- **Authentification** — inscription, connexion, déconnexion avec JWT HttpOnly cookies
+- **Projets** — création, liste, suppression avec optimistic update et animations
+- **Tâches** — CRUD complet, changement de statut inline, estimation en points
+- **Vue Kanban** — drag & drop inter-colonnes avec @dnd-kit
+- **Vue Liste** — filtres par statut, pagination, recherche
+- **Event-driven** — chaque mutation tâche publie un événement Kafka via l'Outbox Pattern
+- **Thème** — dark/light mode persisté
+- **Responsive** — mobile, tablette, desktop
+
+---
+
+## Lancer en local
+
+### Prérequis
+- Node.js 20+
+- Docker + Docker Compose
+
+### Installation
+
+```bash
+git clone https://github.com/Matfen2/freello.git
+cd freello
+npm install
 ```
 
-To run any task with Nx use:
+### Démarrage
 
-```sh
-npx nx <target> <project-name>
+```bash
+# Lance l'infrastructure (PostgreSQL + Kafka + Schema Registry)
+docker compose up -d postgres kafka schema-registry
+
+# Backend (port 3333)
+npx nx serve backend
+
+# Frontend (port 4200)
+npx nx serve frontend
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+### Variables d'environnement
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+Copie `.env.example` en `.env` et remplis les valeurs :
 
-## Versioning and releasing
-
-To version and release the library use
-
-```
-npx nx release
-```
-
-Pass `--dry-run` to see what would happen without actually releasing the library.
-
-[Learn more about Nx release &raquo;](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Keep TypeScript project references up to date
-
-Nx automatically updates TypeScript [project references](https://www.typescriptlang.org/docs/handbook/project-references.html) in `tsconfig.json` files to ensure they remain accurate based on your project dependencies (`import` or `require` statements). This sync is automatically done when running tasks such as `build` or `typecheck`, which require updated references to function correctly.
-
-To manually trigger the process to sync the project graph dependencies information to the TypeScript project references, run the following command:
-
-```sh
-npx nx sync
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=freello
+DB_PASSWORD=freello
+DB_DATABASE=freello
+JWT_ACCESS_SECRET=your-secret-min-32-chars
+JWT_ACCESS_EXPIRES_IN=15m
+KAFKA_BROKERS=localhost:9092
+SCHEMA_REGISTRY_URL=http://localhost:8081
 ```
 
-You can enforce that the TypeScript project references are always in the correct state when running in CI by adding a step to your CI job configuration that runs the following command:
+---
 
-```sh
-npx nx sync:check
+## Tests
+
+```bash
+# Tests unitaires backend (53 tests)
+npx nx test backend
+
+# Lint
+npx nx run-many -t lint
 ```
 
-[Learn more about nx sync](https://nx.dev/reference/nx-commands#sync)
+---
 
-## Nx Cloud
+## CI/CD
 
-Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
+Chaque push sur `main` déclenche automatiquement :
 
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+1. **Job `main`** — lint, tests, build, typecheck
+2. **Job `docker`** (après `main`) — build images Docker, push sur GHCR, deploy SSH sur VPS OVH
 
-### Set up CI (non-Github Actions CI)
-
-**Note:** This is only required if your CI provider is not GitHub Actions.
-
-Use the following command to configure a CI workflow for your workspace:
-
-```sh
-npx nx g ci-workflow
+```
+push main → CI verte → Docker build → GHCR push → SSH deploy → freello.site mis à jour
 ```
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+---
 
-## Install Nx Console
+## API
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+Documentation Swagger disponible sur [https://freello.site/api](https://freello.site/api)
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+Principales routes :
+```
+POST   /v1/auth/register
+POST   /v1/auth/login
+POST   /v1/auth/logout
 
-## Useful links
+GET    /v1/projects
+POST   /v1/projects
+DELETE /v1/projects/:id
 
-Learn more:
+GET    /v1/tasks?projectId=...&status=...&page=1&limit=20
+POST   /v1/tasks
+PATCH  /v1/tasks/:id
+DELETE /v1/tasks/:id
 
-- [Learn more about this workspace setup](https://nx.dev/nx-api/js?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+GET    /v1/health
+```
 
-And join the Nx community:
+---
 
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## Auteur
+
+**Mathieu FENOUIL** — Développeur Full-Stack
+
+- 🌐 [linkedin.com/in/mathieu-fenouil](https://linkedin.com/in/mathieu-fenouil)
+- 💻 [github.com/Matfen2](https://github.com/Matfen2)
+
+Projet réalisé dans le cadre d'un Bac+5 Ingénieur Logiciel (DevOps) chez Liora (ex-DataScientest).
